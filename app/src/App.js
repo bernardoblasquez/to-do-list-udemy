@@ -3,42 +3,30 @@ import React, { useEffect, useState } from 'react';
 import Tasks from './components/Tasks/Tasks';
 import NewTask from './components/NewTask/NewTask';
 import url_firebase  from './url_firebase';
+import useRequest from './hooks/useRequest';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [tasks, setTasks] = useState([]);
 
-  const fetchTasks = async (taskText) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(
-        url_firebase 
-      );
-
-      if (!response.ok) {
-        throw new Error('Request failed!');
-      }
-
-      const data = await response.json();
-
-      const loadedTasks = [];
-
-      for (const taskKey in data) {
-        loadedTasks.push({ id: taskKey, text: data[taskKey].text });
-      }
-
-      setTasks(loadedTasks);
-    } catch (err) {
-      setError(err.message || 'Something went wrong!');
-    }
-    setIsLoading(false);
-  };
+  console.log("App running!!")
+  const {isLoading, error, sendRequest: fetchTasks} = useRequest()
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    const transformTasks = (tasksObj) => {
+      const loadedTasks = [];
+  
+      for (const taskKey in tasksObj) {
+        loadedTasks.push({ id: taskKey, text: tasksObj[taskKey].text });
+      }
+  
+      setTasks(loadedTasks);
+    }
+
+    fetchTasks(
+      {url: url_firebase},
+      transformTasks
+    );
+  }, [fetchTasks]);
 
   const taskAddHandler = (task) => {
     setTasks((prevTasks) => prevTasks.concat(task));
